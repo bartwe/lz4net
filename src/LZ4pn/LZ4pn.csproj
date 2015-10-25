@@ -39,6 +39,9 @@
     <AssemblyOriginatorKeyFile>..\..\LZ4.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
@@ -51,6 +54,8 @@
     <Compile Include="LZ4Codec.Unsafe32HC.Dirty.cs" />
     <Compile Include="LZ4Codec.Unsafe64.Dirty.cs" />
     <Compile Include="LZ4Codec.Unsafe64HC.Dirty.cs" />
+    <Compile Include="LZ4Stream.cs" />
+    <Compile Include="LZ4StreamMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

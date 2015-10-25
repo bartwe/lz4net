@@ -47,6 +47,8 @@
     <Compile Include="LZ4Codec.Safe32HC.Dirty.cs" />
     <Compile Include="LZ4Codec.Safe64.Dirty.cs" />
     <Compile Include="LZ4Codec.Safe64HC.Dirty.cs" />
+    <Compile Include="LZ4Stream.cs" />
+    <Compile Include="LZ4StreamMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

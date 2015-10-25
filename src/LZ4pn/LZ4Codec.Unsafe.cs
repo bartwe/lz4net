@@ -513,6 +513,18 @@ namespace LZ4pn
 			}
 		}
 
+        public static unsafe int Encode32HC(
+    byte* inputPtr,
+    byte* outputPtr,
+    int inputLength,
+    int outputLength) {
+            if (inputLength == 0) return 0;
+
+                var length = LZ4_compressHC_32(inputPtr, outputPtr, inputLength, outputLength);
+                // NOTE: there is a potential problem here as original implementation returns 0 not -1
+                return length <= 0 ? -1 : length;
+        }
+
 		/// <summary>Encodes the specified input using HC codec.</summary>
 		/// <param name="input">The input.</param>
 		/// <param name="inputOffset">The input offset.</param>
