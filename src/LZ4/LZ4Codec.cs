@@ -172,9 +172,7 @@ namespace LZ4
 		private static ILZ4Service AutoTest(ILZ4Service service)
 		{
 			const string loremIpsum =
-				"Lorem ipsum dolor sit amet, consectetur adipis" +
-				"" +
-				"icing elit, sed do eiusmod tempor incididunt ut " +
+				"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut " +
 				"labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
 				"laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in " +
 				"voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat " +
@@ -274,7 +272,7 @@ namespace LZ4
 
 		/// <summary>Tries to create a specified <seealso cref="ILZ4Service" /> and tests it.</summary>
 		/// <typeparam name="T">Concrete <seealso cref="ILZ4Service" /> type.</typeparam>
-		/// <returns>A service if suceeded or <c>null</c> if it failed.</returns>
+		/// <returns>A service if succeeded or <c>null</c> if it failed.</returns>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private static ILZ4Service TryService<T>()
 			where T: ILZ4Service, new()
@@ -283,8 +281,9 @@ namespace LZ4
 			{
 				return AutoTest(new T());
 			}
-			catch
+			catch (Exception)
 			{
+				// I could use Trace here but portable profile does not have Trace
 				return null;
 			}
 		}

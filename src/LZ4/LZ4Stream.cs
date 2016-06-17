@@ -70,6 +70,14 @@ namespace LZ4
 		/// <summary>The high compression flag (compression only).</summary>
 		private readonly bool _highCompression;
 
+		/// <summary>Determines if reading tries to return something ASAP or wait 
+		/// for full chunk (decompression only).</summary>
+		private readonly bool _interactiveRead;
+
+		/// <summary>Isolates inner stream which will not be closed 
+		/// when this stream is closed.</summary>
+		private readonly bool _isolateInnerStream;
+
 		/// <summary>The block size (compression only).</summary>
 		private readonly int _blockSize;
 
@@ -89,17 +97,44 @@ namespace LZ4
 		/// <summary>Initializes a new instance of the <see cref="LZ4Stream" /> class.</summary>
 		/// <param name="innerStream">The inner stream.</param>
 		/// <param name="compressionMode">The compression mode.</param>
-		/// <param name="highCompression">if set to <c>true</c> [high compression].</param>
+		/// <param name="highCompression">if set to <c>true</c> high compression is used.</param>
 		/// <param name="blockSize">Size of the block.</param>
+		/// <param name="interactiveRead">if set to <c>true</c> interactive read mode is used. 
+		/// It means that <see cref="Read"/> method tries to return data as soon as possible. 
+		/// Please note, that this should be default behavior but has been made optional for 
+		/// backward compatibility. This constructor will be changed in next major release.</param>
+		[Obsolete("This constructor is obsolete")]
 		public LZ4Stream(
 			Stream innerStream,
 			LZ4StreamMode compressionMode,
-			bool highCompression = false,
-			int blockSize = 1024*1024)
+			bool highCompression,
+			int blockSize = 1024*1024,
+			bool interactiveRead = false)
 		{
 			_innerStream = innerStream;
 			_compressionMode = compressionMode;
 			_highCompression = highCompression;
+			_interactiveRead = interactiveRead;
+			_isolateInnerStream = false;
+			_blockSize = Math.Max(16, blockSize);
+		}
+
+		/// <summary>Initializes a new instance of the <see cref="LZ4Stream" /> class.</summary>
+		/// <param name="innerStream">The inner stream.</param>
+		/// <param name="compressionMode">The compression mode.</param>
+		/// <param name="compressionFlags">The compression flags.</param>
+		/// <param name="blockSize">Size of the block.</param>
+		public LZ4Stream(
+			Stream innerStream,
+			LZ4StreamMode compressionMode,
+			LZ4StreamFlags compressionFlags = LZ4StreamFlags.Default,
+			int blockSize = 1024*1024)
+		{
+			_innerStream = innerStream;
+			_compressionMode = compressionMode;
+			_highCompression = (compressionFlags & LZ4StreamFlags.HighCompression) != 0;
+			_interactiveRead = (compressionFlags & LZ4StreamFlags.InteractiveRead) != 0;
+			_isolateInnerStream = (compressionFlags & LZ4StreamFlags.IsolateInnerStream) != 0;
 			_blockSize = Math.Max(16, blockSize);
 		}
 
@@ -127,7 +162,7 @@ namespace LZ4
 		/// <summary>Tries to read variable length int.</summary>
 		/// <param name="result">The result.</param>
 		/// <returns><c>true</c> if integer has been read, <c>false</c> if end of stream has been
-		/// encountered. If end of stream has been encoutered in the middle of value 
+		/// encountered. If end of stream has been encountered in the middle of value 
 		/// <see cref="EndOfStreamException"/> is thrown.</returns>
 		private bool TryReadVarInt(out ulong result)
 		{
@@ -212,7 +247,7 @@ namespace LZ4
 
 			if (compressedLength <= 0 || compressedLength >= _bufferOffset)
 			{
-				// uncompressible block
+				// incompressible block
 				compressed = _buffer;
 				compressedLength = _bufferOffset;
 			}
@@ -252,7 +287,7 @@ namespace LZ4
 				var compressed = new byte[compressedLength];
 				var chunk = ReadBlock(compressed, 0, compressedLength);
 
-				if (chunk != compressedLength) throw EndOfStream(); // currupted
+				if (chunk != compressedLength) throw EndOfStream(); // corrupted
 
 				if (!isCompressed)
 				{
@@ -351,9 +386,10 @@ namespace LZ4
 				{
 					Buffer.BlockCopy(_buffer, _bufferOffset, buffer, offset, chunk);
 					_bufferOffset += chunk;
+					total += chunk;
+					if (_interactiveRead) break;
 					offset += chunk;
 					count -= chunk;
-					total += chunk;
 				}
 				else
 				{
@@ -438,7 +474,8 @@ namespace LZ4
 		protected override void Dispose(bool disposing)
 		{
 			Flush();
-			_innerStream.Dispose();
+			if (!_isolateInnerStream)
+				_innerStream.Dispose();
 			base.Dispose(disposing);
 		}
 

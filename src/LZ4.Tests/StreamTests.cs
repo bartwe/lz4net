@@ -36,7 +36,7 @@ namespace LZ4.Tests
 			}
 
 			using (var istream = File.OpenRead(tempFileName))
-			using (var zstream = new LZ4Stream(istream, CompressionMode.Decompress))
+			using (var zstream = new LZ4Stream(istream, CompressionMode.Decompress, LZ4StreamFlags.InteractiveRead))
 			using (var ostream = File.Create(tempFileName + ".orig"))
 			{
 				zstream.CopyTo(ostream);
@@ -56,30 +56,42 @@ namespace LZ4.Tests
 			DoAction(
 				(b, s) => {
 					var buffer = new byte[b.Length];
-					buffer[0] = (byte)s.ReadByte();
-					s.Read(buffer, 1, buffer.Length - 1);
+					FullBlockRead(s, buffer, 0, buffer.Length);
 					Utilities.AssertEqual(b, buffer, "Read");
 				},
 				true);
 		}
 
+		private void FullBlockRead(Stream stream, byte[] buffer, int offset, int length)
+		{
+			while (length > 0)
+			{
+				var read = stream.Read(buffer, offset, length);
+				length -= read;
+				offset += read;
+				if (read == 0) 
+					throw new EndOfStreamException();
+			}
+		}
+
 		[Test]
 		public void TcpClientServer()
 		{
+			const int port = 54856;
 			Parallel.Invoke(
-				TcpServer,
-				TcpClient);
+				() => TcpServer(port),
+				() => TcpClient(port));
 		}
 
-		public void TcpClient()
+		public void TcpClient(int port)
 		{
 			var client = new TcpClient();
-			client.Connect("127.0.0.1", 4444);
+			client.Connect("127.0.0.1", port);
 
 			Console.WriteLine("Connected...");
 
 			using (var tcpStream = client.GetStream())
-			using (var lz4Stream = new LZ4Stream(tcpStream, CompressionMode.Decompress))
+			using (var lz4Stream = new LZ4Stream(tcpStream, CompressionMode.Decompress, LZ4StreamFlags.InteractiveRead))
 			using (var reader = new BinaryReader(lz4Stream))
 			{
 				while (true)
@@ -94,9 +106,9 @@ namespace LZ4.Tests
 			}
 		}
 
-		public void TcpServer()
+		public void TcpServer(int port)
 		{
-			var listener = new TcpListener(IPAddress.Any, 4444);
+			var listener = new TcpListener(IPAddress.Any, port);
 			listener.Start();
 
 			try
@@ -104,7 +116,7 @@ namespace LZ4.Tests
 				Console.WriteLine("Waiting for client...");
 				var client = listener.AcceptTcpClient();
 				using (var tcpStream = client.GetStream())
-				using (var lz4Stream = new LZ4Stream(tcpStream, CompressionMode.Compress, blockSize: 128*1024))
+				using (var lz4Stream = new LZ4Stream(tcpStream, CompressionMode.Compress, blockSize : 128 * 1024))
 				using (var writer = new BinaryWriter(lz4Stream))
 				{
 					foreach (var file in Directory.GetFiles(Utilities.GetSilesiaCorpusFolder(), "*", SearchOption.AllDirectories))
@@ -138,14 +150,15 @@ namespace LZ4.Tests
 			var provider = new BlockDataProvider(Utilities.GetSilesiaCorpusFolder());
 			var r = new Random(0);
 
-			Console.WriteLine("Architecture: {0}bit", IntPtr.Size*8);
+			Console.WriteLine("Architecture: {0}bit", IntPtr.Size * 8);
 			Console.WriteLine("CodecName: {0}", LZ4Codec.CodecName);
 
 			var fileName = Path.Combine(Path.GetTempPath(), "BlockCompressionStream.dat");
 
 			using (var stream = new LZ4Stream(
 				read ? File.OpenRead(fileName) : File.Create(fileName),
-				read ? CompressionMode.Decompress : CompressionMode.Compress, true))
+				read ? CompressionMode.Decompress : CompressionMode.Compress,
+				LZ4StreamFlags.HighCompression))
 			{
 				var total = 0;
 				const long limit = TOTAL_SIZE;
@@ -157,7 +170,7 @@ namespace LZ4.Tests
 					var block = provider.GetBytes(length);
 					action(block, stream);
 					total += block.Length;
-					var pct = (int)((double)total*100/limit);
+					var pct = (int)((double)total * 100 / limit);
 					if (pct > last_pct)
 					{
 						Console.WriteLine("{0}%...", pct);
