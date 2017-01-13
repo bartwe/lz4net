@@ -83,7 +83,9 @@ namespace LZ4pn
 		/// <summary>The offset in a buffer.</summary>
 		private int _bufferOffset;
 
-		#endregion
+	    LZ4Codec.LZ4EncodeContext _context;
+
+	    #endregion
 
 		#region constructor
 
@@ -93,11 +95,13 @@ namespace LZ4pn
 		/// <param name="highCompression">if set to <c>true</c> [high compression].</param>
 		/// <param name="blockSize">Size of the block.</param>
 		public LZ4Stream(
+            LZ4Codec.LZ4EncodeContext context,
 			Stream innerStream,
 			LZ4StreamMode compressionMode,
 			bool highCompression = false,
 			int blockSize = 1024*1024)
 		{
+            _context = context;
 			_innerStream = innerStream;
 			_compressionMode = compressionMode;
 			_highCompression = highCompression;
@@ -207,9 +211,9 @@ namespace LZ4pn
 			if (_bufferOffset <= 0) return;
 
 			var compressed = new byte[_bufferOffset];
-			var compressedLength = _highCompression
-				? LZ4Codec.Encode32HC(_buffer, 0, _bufferOffset, compressed, 0, _bufferOffset)
-				: LZ4Codec.Encode32(_buffer, 0, _bufferOffset, compressed, 0, _bufferOffset);
+		    var compressedLength = _highCompression
+                ? LZ4Codec.Encode32HC(_context, _buffer, 0, _bufferOffset, compressed, 0, _bufferOffset)
+				: LZ4Codec.Encode32(_context, _buffer, 0, _bufferOffset, compressed, 0, _bufferOffset);
 
 			if (compressedLength <= 0 || compressedLength >= _bufferOffset)
 			{

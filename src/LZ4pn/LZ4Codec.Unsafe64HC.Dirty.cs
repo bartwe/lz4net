@@ -69,7 +69,7 @@ namespace LZ4pn
 	public static partial class LZ4Codec
 	{
 		// Update chains up to ip (excluded)
-		private static unsafe void LZ4HC_Insert_64(LZ4HC_Data_Structure hc4, byte* src_p)
+		private static unsafe void LZ4HC_Insert_64(LZ4EncodeContext hc4, byte* src_p)
 		{
 			fixed (ushort* chainTable = hc4.chainTable)
 			fixed (int* hashTable = hc4.hashTable)
@@ -121,7 +121,7 @@ namespace LZ4pn
 		}
 
 		private static unsafe int LZ4HC_InsertAndFindBestMatch_64(
-			LZ4HC_Data_Structure hc4, byte* src_p, byte* src_LASTLITERALS, ref byte* matchpos)
+            LZ4EncodeContext hc4, byte* src_p, byte* src_LASTLITERALS, ref byte* matchpos)
 		{
 			fixed (ushort* chainTable = hc4.chainTable)
 			fixed (int* hashTable = hc4.hashTable)
@@ -188,7 +188,7 @@ namespace LZ4pn
 		}
 
 		private static unsafe int LZ4HC_InsertAndGetWiderMatch_64(
-			LZ4HC_Data_Structure hc4, byte* src_p, byte* startLimit, byte* src_LASTLITERALS, int longest,
+            LZ4EncodeContext hc4, byte* src_p, byte* startLimit, byte* src_LASTLITERALS, int longest,
 			ref byte* matchpos, ref byte* startpos)
 		{
 			fixed (ushort* chainTable = hc4.chainTable)
@@ -329,7 +329,7 @@ namespace LZ4pn
 		}
 
 		private static unsafe int LZ4_compressHCCtx_64(
-			LZ4HC_Data_Structure ctx,
+            LZ4EncodeContext ctx,
 			byte* src,
 			byte* dst,
 			int src_len,
