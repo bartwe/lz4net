@@ -273,6 +273,7 @@ namespace LZ4pn {
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
                 var length = LZ4_compressHC_32(hc4, inputPtr, outputPtr, inputLength, outputLength);
+                hc4.Reset();
                 // NOTE: there is a potential problem here as original implementation returns 0 not -1
                 return length <= 0 ? -1 : length;
             }
@@ -288,8 +289,8 @@ namespace LZ4pn {
                 return 0;
 
             var length = LZ4_compressHC_32(hc4, inputPtr, outputPtr, inputLength, outputLength);
-            // NOTE: there is a potential problem here as original implementation returns 0 not -1
             hc4.Reset();
+            // NOTE: there is a potential problem here as original implementation returns 0 not -1
 
             return length <= 0 ? -1 : length;
         }
