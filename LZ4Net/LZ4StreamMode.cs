@@ -25,7 +25,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #endregion
 
-namespace LZ4pn {
+namespace LZ4Net {
     /// <summary>
     /// Originally this type comes from System.IO.Compression, 
     /// but it is not present in portable assemblies.

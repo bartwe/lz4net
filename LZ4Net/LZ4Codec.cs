@@ -27,7 +27,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
 
-namespace LZ4pn {
+namespace LZ4Net {
     /// <summary>Unsafe LZ4 codec.</summary>
     public static class LZ4Codec {
         /// <summary>

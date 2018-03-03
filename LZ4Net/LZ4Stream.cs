@@ -28,7 +28,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System;
 using System.IO;
 
-namespace LZ4pn {
+namespace LZ4Net {
     // ReSharper disable once PartialTypeWithSinglePart
     /// <summary>Block compression stream. Allows to use LZ4 for stream compression.</summary>
     public partial class LZ4Stream : Stream {
