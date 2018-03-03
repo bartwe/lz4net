@@ -1088,25 +1088,25 @@ namespace LZ4Net {
         }
 
         static unsafe int LZ4HC_CommonLength(byte* p1, byte* p2, byte* src_LASTLITERALS, int* debruijn32) {
-                var p1t = p1;
+            var p1t = p1;
 
-                while (p1t < src_LASTLITERALS - (STEPSIZE_32 - 1)) {
-                    var diff = (*(int*)(p2)) ^ (*(int*)(p1t));
-                    if (diff == 0) {
-                        p1t += STEPSIZE_32;
-                        p2 += STEPSIZE_32;
-                        continue;
-                    }
-                    p1t += debruijn32[(((uint)((diff) & -(diff)) * 0x077CB531u)) >> 27];
-                    return (int)(p1t - p1);
+            while (p1t < src_LASTLITERALS - (STEPSIZE_32 - 1)) {
+                var diff = (*(int*)(p2)) ^ (*(int*)(p1t));
+                if (diff == 0) {
+                    p1t += STEPSIZE_32;
+                    p2 += STEPSIZE_32;
+                    continue;
                 }
-                if ((p1t < (src_LASTLITERALS - 1)) && ((*(ushort*)(p2)) == (*(ushort*)(p1t)))) {
-                    p1t += 2;
-                    p2 += 2;
-                }
-                if ((p1t < src_LASTLITERALS) && (*p2 == *p1t))
-                    p1t++;
+                p1t += debruijn32[(((uint)((diff) & -(diff)) * 0x077CB531u)) >> 27];
                 return (int)(p1t - p1);
+            }
+            if ((p1t < (src_LASTLITERALS - 1)) && ((*(ushort*)(p2)) == (*(ushort*)(p1t)))) {
+                p1t += 2;
+                p2 += 2;
+            }
+            if ((p1t < src_LASTLITERALS) && (*p2 == *p1t))
+                p1t++;
+            return (int)(p1t - p1);
         }
 
         static unsafe int LZ4HC_InsertAndFindBestMatch(
