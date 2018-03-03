@@ -222,7 +222,6 @@ namespace LZ4Net {
                     result = LZ4_compressCtx(h, input, output, inputLength, outputLength);
                 }
             }
-            lz4EncodeContext.Reset();
             return result;
         }
 
@@ -355,7 +354,6 @@ namespace LZ4Net {
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
                 var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
-                hc4.Reset();
                 // NOTE: there is a potential problem here as original implementation returns 0 not -1
                 return length <= 0 ? -1 : length;
             }
@@ -371,7 +369,6 @@ namespace LZ4Net {
                 return 0;
 
             var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
-            hc4.Reset();
             // NOTE: there is a potential problem here as original implementation returns 0 not -1
 
             return length <= 0 ? -1 : length;

@@ -5,11 +5,11 @@ using System.Resources;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("LZ4pn")]
+[assembly: AssemblyTitle("LZ4Net")]
 [assembly: AssemblyDescription("LZ4 compression codec (Portable/Unsafe)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Milosz Krajewski")]
-[assembly: AssemblyProduct("LZ4pn")]
+[assembly: AssemblyProduct("LZ4Net")]
 [assembly: AssemblyCopyright("Copyright (c) 2015, Milosz Krajewski")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
