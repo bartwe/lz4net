@@ -7,8 +7,8 @@
     <ProjectGuid>{122171E5-3CA2-49D4-B452-8FD2BF03C174}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LZ4pn</RootNamespace>
-    <AssemblyName>LZ4pn</AssemblyName>
+    <RootNamespace>LZ4Net</RootNamespace>
+    <AssemblyName>LZ4Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
