@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LZ4Codec.Unsafe.cs" />
+    <Compile Include="LZ4Codec.cs" />
     <Compile Include="LZ4Stream.cs" />
     <Compile Include="LZ4StreamMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
