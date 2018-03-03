@@ -79,8 +79,6 @@ namespace LZ4pn {
                 *dst++ = val;
         }
 
-        #region Encode32
-
         public unsafe class LZ4EncodeContext {
             //normal
             internal ushort[] HASH64K = new ushort[HASH64K_TABLESIZE];
@@ -161,10 +159,6 @@ namespace LZ4pn {
             }
         }
 
-        #endregion
-
-        #region Decode32
-
         /// <summary>Decodes the specified input.</summary>
         /// <param name="input">The input.</param>
         /// <param name="inputLength">Length of the input.</param>
@@ -222,10 +216,6 @@ namespace LZ4pn {
             }
         }
 
-        #endregion
-
-        #region HC utilities
-
         // ReSharper disable InconsistentNaming
 
         static unsafe LZ4EncodeContext LZ4HC_Create(LZ4EncodeContext hc4, byte* src) {
@@ -238,10 +228,6 @@ namespace LZ4pn {
 
             return hc4;
         }
-
-        #endregion
-
-        #region Encode32HC
 
         static unsafe int LZ4_compressHC_32(LZ4EncodeContext hc4, byte* input, byte* output, int inputLength, int outputLength) {
             return LZ4_compressHCCtx_32(LZ4HC_Create(hc4, input), input, output, inputLength, outputLength);
@@ -294,7 +280,5 @@ namespace LZ4pn {
 
             return length <= 0 ? -1 : length;
         }
-
-        #endregion
     }
 }

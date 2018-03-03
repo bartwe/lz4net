@@ -25,13 +25,14 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>UNSAFE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -43,9 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\LZ4ps\LZ4Codec.cs">
-      <Link>LZ4Codec.cs</Link>
-    </Compile>
+    <Compile Include="LZ4Codec.cs" />
     <Compile Include="LZ4Codec.Unsafe.cs" />
     <Compile Include="LZ4Codec.Unsafe32.Dirty.cs" />
     <Compile Include="LZ4Codec.Unsafe32HC.Dirty.cs" />

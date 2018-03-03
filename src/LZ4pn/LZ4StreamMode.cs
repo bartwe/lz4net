@@ -25,18 +25,16 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #endregion
 
-namespace LZ4pn
-{
-	/// <summary>
-	/// Originally this type comes from System.IO.Compression, 
-	/// but it is not present in portable assemblies.
-	/// </summary>
-	public enum LZ4StreamMode
-	{
-		/// <summary>Compress</summary>
-		Compress,
+namespace LZ4pn {
+    /// <summary>
+    /// Originally this type comes from System.IO.Compression, 
+    /// but it is not present in portable assemblies.
+    /// </summary>
+    public enum LZ4StreamMode {
+        /// <summary>Compress</summary>
+        Compress,
 
-		/// <summary>Decompress</summary>
-		Decompress,
-	}
+        /// <summary>Decompress</summary>
+        Decompress,
+    }
 }
