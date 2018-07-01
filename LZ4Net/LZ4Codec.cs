@@ -271,13 +271,13 @@ namespace LZ4Net {
             if (knownOutputLength) {
                 var length = LZ4_uncompress(input, output, outputLength);
                 if (length != inputLength)
-                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given.");
+                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length +" inputLength: "+inputLength);
                 return outputLength;
             }
             else {
                 var length = LZ4_uncompress_unknownOutputSize(input, output, inputLength, outputLength);
                 if (length < 0)
-                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given.");
+                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length);
                 return length;
             }
         }
