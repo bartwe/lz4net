@@ -248,7 +248,7 @@ namespace LZ4Net {
                     var passes = (int)flags >> 2;
                     if (passes != 0)
                         throw new NotSupportedException("Chunks with multiple passes are not supported.");
-                    LZ4Codec.Decode32(compressed, 0, compressedLength, _buffer, 0, originalLength, true);
+                    LZ4Codec.Decode32(compressed, 0, compressedLength, _buffer, 0, originalLength);
                     _bufferLength = originalLength;
                 }
 

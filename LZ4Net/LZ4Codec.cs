@@ -266,20 +266,11 @@ namespace LZ4Net {
             byte* input,
             int inputLength,
             byte* output,
-            int outputLength,
-            bool knownOutputLength) {
-            if (knownOutputLength) {
+            int outputLength) {
                 var length = LZ4_uncompress(input, output, outputLength);
                 if (length != inputLength)
                     throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length +" inputLength: "+inputLength);
                 return outputLength;
-            }
-            else {
-                var length = LZ4_uncompress_unknownOutputSize(input, output, inputLength, outputLength);
-                if (length < 0)
-                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length);
-                return length;
-            }
         }
 
         /// <summary>Decodes the specified input.</summary>
@@ -297,8 +288,7 @@ namespace LZ4Net {
             int inputLength,
             byte[] output,
             int outputOffset,
-            int outputLength,
-            bool knownOutputLength) {
+            int outputLength) {
             CheckArguments(
                 input, inputOffset, ref inputLength,
                 output, outputOffset, ref outputLength);
@@ -308,7 +298,7 @@ namespace LZ4Net {
 
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
-                return Decode32(inputPtr, inputLength, outputPtr, outputLength, knownOutputLength);
+                return Decode32(inputPtr, inputLength, outputPtr, outputLength);
             }
         }
 
