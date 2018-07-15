@@ -28,6 +28,11 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System;
 
 namespace LZ4Net {
+    public class LZ4Exception : Exception {
+        public LZ4Exception(string message) : base(message) {
+        }
+    }
+
     /// <summary>Unsafe LZ4 codec.</summary>
     public static class LZ4Codec {
         /// <summary>
@@ -826,7 +831,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH) {
                             if (dst_cpy != dst_end)
-                                goto _output_error; // Error : not enough place for another match (min 4) + 5 literals
+                                throw new LZ4Exception("LZ4 Stream corrupt. Not enough place for another match (min 4) + 5 literals");
                             BlockCopy(src_p, dst_p, (length));
                             src_p += length;
                             break; // EOF
@@ -846,7 +851,7 @@ namespace LZ4Net {
                         xxx_ref = (dst_cpy) - (*(ushort*)(src_p));
                         src_p += 2;
                         if (xxx_ref < dst)
-                            goto _output_error; // Error : offset outside destination buffer
+                            throw new LZ4Exception("LZ4 Stream corrupt. Offset outside destination buffer");
 
                         // get matchlength
                         if ((length = (int)(xxx_token & ML_MASK)) == ML_MASK) {
@@ -879,7 +884,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH_STEPSIZE_4) {
                             if (dst_cpy > dst_LASTLITERALS)
-                                goto _output_error; // Error : last 5 bytes must be literals
+                                throw new LZ4Exception("LZ4 Stream corrupt. Last 5 bytes must be literals");
                             {
                                 do {
                                     *(uint*)dst_p = *(uint*)xxx_ref;
@@ -910,158 +915,9 @@ namespace LZ4Net {
 
                     // end of decoding
                     return (int)((src_p) - src);
-
-                    // write overflow error detected
-                    _output_error:
-                    return (int)(-((src_p) - src));
                 }
             }
         }
-
-        static unsafe int LZ4_uncompress_unknownOutputSize(
-            byte* src,
-            byte* dst,
-            int src_len,
-            int dst_maxlen) {
-            fixed (int* dec32table = &DECODER_TABLE_32[0]) {
-                // r93
-                var src_p = src;
-                var src_end = src_p + src_len;
-                byte* xxx_ref;
-
-                var dst_p = dst;
-                var dst_end = dst_p + dst_maxlen;
-                byte* dst_cpy;
-
-                var src_LASTLITERALS_3 = (src_end - (2 + 1 + LASTLITERALS));
-                var src_LASTLITERALS_1 = (src_end - (LASTLITERALS + 1));
-                var dst_COPYLENGTH = (dst_end - COPYLENGTH);
-                var dst_COPYLENGTH_STEPSIZE_4 = (dst_end - (COPYLENGTH + (STEPSIZE_32 - 4)));
-                var dst_LASTLITERALS = (dst_end - LASTLITERALS);
-                var dst_MFLIMIT = (dst_end - MFLIMIT);
-
-                // Special case
-                if (src_p == src_end)
-                    goto _output_error; // A correctly formed null-compressed LZ4 must have at least one byte (token=0)
-
-                // Main Loop
-                while (true) {
-                    uint xxx_token;
-                    int length;
-
-                    // get runlength
-                    xxx_token = *src_p++;
-                    if ((length = (int)(xxx_token >> ML_BITS)) == RUN_MASK) {
-                        var s = 255;
-                        while ((src_p < src_end) && (s == 255)) {
-                            s = *src_p++;
-                            length += s;
-                        }
-                    }
-
-                    // copy literals
-                    dst_cpy = dst_p + length;
-
-                    if ((dst_cpy > dst_MFLIMIT) || (src_p + length > src_LASTLITERALS_3)) {
-                        if (dst_cpy > dst_end)
-                            goto _output_error; // Error : writes beyond output buffer
-                        if (src_p + length != src_end)
-                            goto _output_error; // Error : LZ4 format requires to consume all input at this stage (no match within the last 11 bytes, and at least 8 remaining input bytes for another match+literals)
-                        BlockCopy(src_p, dst_p, (length));
-                        dst_p += length;
-                        break; // Necessarily EOF, due to parsing restrictions
-                    }
-                    do {
-                        *(uint*)dst_p = *(uint*)src_p;
-                        dst_p += 4;
-                        src_p += 4;
-                        *(uint*)dst_p = *(uint*)src_p;
-                        dst_p += 4;
-                        src_p += 4;
-                    } while (dst_p < dst_cpy);
-                    src_p -= (dst_p - dst_cpy);
-                    dst_p = dst_cpy;
-
-                    // get offset
-                    xxx_ref = (dst_cpy) - (*(ushort*)(src_p));
-                    src_p += 2;
-                    if (xxx_ref < dst)
-                        goto _output_error; // Error : offset outside of destination buffer
-
-                    // get matchlength
-                    if ((length = (int)(xxx_token & ML_MASK)) == ML_MASK) {
-                        while (src_p < src_LASTLITERALS_1) // Error : a minimum input bytes must remain for LASTLITERALS + token
-                        {
-                            int s = *src_p++;
-                            length += s;
-                            if (s == 255)
-                                continue;
-                            break;
-                        }
-                    }
-
-                    // copy repeated sequence
-                    if (dst_p - xxx_ref < STEPSIZE_32) {
-                        const int dec64 = 0;
-
-                        dst_p[0] = xxx_ref[0];
-                        dst_p[1] = xxx_ref[1];
-                        dst_p[2] = xxx_ref[2];
-                        dst_p[3] = xxx_ref[3];
-                        dst_p += 4;
-                        xxx_ref += 4;
-                        xxx_ref -= dec32table[dst_p - xxx_ref];
-                        (*(uint*)(dst_p)) = (*(uint*)(xxx_ref));
-                        dst_p += STEPSIZE_32 - 4;
-                        xxx_ref -= dec64;
-                    }
-                    else {
-                        *(uint*)dst_p = *(uint*)xxx_ref;
-                        dst_p += 4;
-                        xxx_ref += 4;
-                    }
-                    dst_cpy = dst_p + length - (STEPSIZE_32 - 4);
-
-                    if (dst_cpy > dst_COPYLENGTH_STEPSIZE_4) {
-                        if (dst_cpy > dst_LASTLITERALS)
-                            goto _output_error; // Error : last 5 bytes must be literals
-                        {
-                            do {
-                                *(uint*)dst_p = *(uint*)xxx_ref;
-                                dst_p += 4;
-                                xxx_ref += 4;
-                                *(uint*)dst_p = *(uint*)xxx_ref;
-                                dst_p += 4;
-                                xxx_ref += 4;
-                            } while (dst_p < dst_COPYLENGTH);
-                        }
-
-                        while (dst_p < dst_cpy)
-                            *dst_p++ = *xxx_ref++;
-                        dst_p = dst_cpy;
-                        continue;
-                    }
-
-                    do {
-                        *(uint*)dst_p = *(uint*)xxx_ref;
-                        dst_p += 4;
-                        xxx_ref += 4;
-                        *(uint*)dst_p = *(uint*)xxx_ref;
-                        dst_p += 4;
-                        xxx_ref += 4;
-                    } while (dst_p < dst_cpy);
-                    dst_p = dst_cpy; // correction
-                }
-
-                // end of decoding
-                return (int)((dst_p) - dst);
-
-                // write overflow error detected
-                _output_error:
-                return (int)(-((src_p) - src));
-            }
-        }
-
 
         static unsafe void LZ4HC_Insert(LZ4EncodeContext hc4, byte* src_p, ushort* chainTable, int* hashTable) {
             var src_base = hc4.src_base;
