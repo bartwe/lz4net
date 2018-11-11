@@ -29,8 +29,7 @@ using System;
 
 namespace LZ4Net {
     public class LZ4Exception : Exception {
-        public LZ4Exception(string message) : base(message) {
-        }
+        public LZ4Exception(string message) : base(message) {}
     }
 
     /// <summary>Unsafe LZ4 codec.</summary>
@@ -191,17 +190,17 @@ namespace LZ4Net {
             internal int[] hashTable = new int[HASHHC_TABLESIZE];
             internal ushort[] chainTable = new ushort[MAXD];
 
-            public void Reset() {
-                Array.Clear(HASH64K, 0, HASH64K.Length);
-                Array.Clear(HASH, 0, HASH.Length);
-
+            public void ResetHC() {
                 src_base = (byte*)0;
                 nextToUpdate = (byte*)0;
-                Array.Clear(hashTable, 0, hashTable.Length);
-                Array.Clear(chainTable, 0, chainTable.Length);
+                fixed (int* h = hashTable) {
+                    for (var i = 0; i < HASHHC_TABLESIZE; ++i)
+                        h[i] = 0;
+                }
+
+                //chainTable cleared in LZ4HC_Create
             }
         }
-
 
         /// <summary>Encodes the specified input.</summary>
         /// <param name="input">The input.</param>
@@ -217,17 +216,20 @@ namespace LZ4Net {
             int result;
             if (inputLength < LZ4_64KLIMIT) {
                 var hashTable = lz4EncodeContext.HASH64K;
-                fixed (ushort* h = &hashTable[0]) {
+                fixed (ushort* h = hashTable) {
                     result = LZ4_compress64kCtx(h, input, output, inputLength, outputLength);
+                    for (var i = 0; i < HASH64K_TABLESIZE; ++i)
+                        h[i] = 0;
                 }
             }
             else {
                 var hashTable = lz4EncodeContext.HASH;
-                fixed (byte** h = &hashTable[0]) {
+                fixed (byte** h = hashTable) {
                     result = LZ4_compressCtx(h, input, output, inputLength, outputLength);
+                    for (var i = 0; i < HASH_TABLESIZE; ++i)
+                        h[i] = (byte*)0;
                 }
             }
-            lz4EncodeContext.Reset();
             return result;
         }
 
@@ -272,10 +274,10 @@ namespace LZ4Net {
             int inputLength,
             byte* output,
             int outputLength) {
-                var length = LZ4_uncompress(input, output, outputLength);
-                if (length != inputLength)
-                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length +" inputLength: "+inputLength);
-                return outputLength;
+            var length = LZ4_uncompress(input, output, outputLength);
+            if (length != inputLength)
+                throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length + " inputLength: " + inputLength);
+            return outputLength;
         }
 
         /// <summary>Decodes the specified input.</summary>
@@ -310,7 +312,7 @@ namespace LZ4Net {
         // ReSharper disable InconsistentNaming
 
         static unsafe LZ4EncodeContext LZ4HC_Create(LZ4EncodeContext hc4, byte* src) {
-            fixed (ushort* ct = &hc4.chainTable[0]) {
+            fixed (ushort* ct = hc4.chainTable) {
                 BlockFill((byte*)ct, MAXD * sizeof(ushort), 0xFF);
             }
 
@@ -350,7 +352,7 @@ namespace LZ4Net {
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
                 var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
-                hc4.Reset();
+                hc4.ResetHC();
                 // NOTE: there is a potential problem here as original implementation returns 0 not -1
                 return length <= 0 ? -1 : length;
             }
@@ -367,7 +369,7 @@ namespace LZ4Net {
 
             var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
             // NOTE: there is a potential problem here as original implementation returns 0 not -1
-            hc4.Reset();
+            hc4.ResetHC();
 
             return length <= 0 ? -1 : length;
         }
