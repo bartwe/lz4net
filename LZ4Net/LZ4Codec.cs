@@ -189,17 +189,6 @@ namespace LZ4Net {
             internal byte* nextToUpdate;
             internal int[] hashTable = new int[HASHHC_TABLESIZE];
             internal ushort[] chainTable = new ushort[MAXD];
-
-            public void ResetHC() {
-                src_base = (byte*)0;
-                nextToUpdate = (byte*)0;
-                fixed (int* h = hashTable) {
-                    for (var i = 0; i < HASHHC_TABLESIZE; ++i)
-                        h[i] = 0;
-                }
-
-                //chainTable cleared in LZ4HC_Create
-            }
         }
 
         /// <summary>Encodes the specified input.</summary>
@@ -217,17 +206,15 @@ namespace LZ4Net {
             if (inputLength < LZ4_64KLIMIT) {
                 var hashTable = lz4EncodeContext.HASH64K;
                 fixed (ushort* h = hashTable) {
+                    BlockFill((byte*)h, HASH64K_TABLESIZE * sizeof(ushort), 0x00);
                     result = LZ4_compress64kCtx(h, input, output, inputLength, outputLength);
-                    for (var i = 0; i < HASH64K_TABLESIZE; ++i)
-                        h[i] = 0;
                 }
             }
             else {
                 var hashTable = lz4EncodeContext.HASH;
                 fixed (byte** h = hashTable) {
+                    BlockFill((byte*)h, HASH_TABLESIZE * sizeof(byte*), 0x00);
                     result = LZ4_compressCtx(h, input, output, inputLength, outputLength);
-                    for (var i = 0; i < HASH_TABLESIZE; ++i)
-                        h[i] = (byte*)0;
                 }
             }
             return result;
@@ -315,6 +302,9 @@ namespace LZ4Net {
             fixed (ushort* ct = hc4.chainTable) {
                 BlockFill((byte*)ct, MAXD * sizeof(ushort), 0xFF);
             }
+            fixed (int* h = hc4.hashTable) {
+                BlockFill((byte*)h, HASHHC_TABLESIZE * sizeof(int), 0x00);
+            }
 
             hc4.src_base = src;
             hc4.nextToUpdate = src + 1;
@@ -352,7 +342,6 @@ namespace LZ4Net {
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
                 var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
-                hc4.ResetHC();
                 // NOTE: there is a potential problem here as original implementation returns 0 not -1
                 return length <= 0 ? -1 : length;
             }
@@ -369,7 +358,6 @@ namespace LZ4Net {
 
             var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
             // NOTE: there is a potential problem here as original implementation returns 0 not -1
-            hc4.ResetHC();
 
             return length <= 0 ? -1 : length;
         }
