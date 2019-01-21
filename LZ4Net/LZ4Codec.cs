@@ -821,7 +821,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH) {
                             if (dst_cpy != dst_end)
-                                throw new LZ4Exception("LZ4 Stream corrupt. Not enough place for another match (min 4) + 5 literals");
+                                throw new LZ4Exception("LZ4 Stream corrupt."); // Not enough place for another match (min 4) + 5 literals");
                             BlockCopy(src_p, dst_p, (length));
                             src_p += length;
                             break; // EOF
@@ -841,7 +841,7 @@ namespace LZ4Net {
                         xxx_ref = (dst_cpy) - (*(ushort*)(src_p));
                         src_p += 2;
                         if (xxx_ref < dst)
-                            throw new LZ4Exception("LZ4 Stream corrupt. Offset outside destination buffer");
+                            throw new LZ4Exception("LZ4 Stream corrupt.");// Offset outside destination buffer");
 
                         // get matchlength
                         if ((length = (int)(xxx_token & ML_MASK)) == ML_MASK) {
@@ -874,7 +874,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH_STEPSIZE_4) {
                             if (dst_cpy > dst_LASTLITERALS)
-                                throw new LZ4Exception("LZ4 Stream corrupt. Last 5 bytes must be literals");
+                                throw new LZ4Exception("LZ4 Stream corrupt.");// Last 5 bytes must be literals");
                             {
                                 do {
                                     *(uint*)dst_p = *(uint*)xxx_ref;
