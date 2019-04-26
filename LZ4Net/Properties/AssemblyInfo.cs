@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Resources;
 
@@ -13,7 +14,7 @@ using System.Resources;
 [assembly: AssemblyCopyright("Copyright (c) 2015, Milosz Krajewski")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: NeutralResourcesLanguage("en")]
+[assembly: NeutralResourcesLanguage("")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -28,3 +29,5 @@ using System.Resources;
 
 [assembly: AssemblyVersion("1.0.10.93")]
 [assembly: AssemblyFileVersion("1.0.10.93")]
+[assembly: ComVisible(false)]
+
