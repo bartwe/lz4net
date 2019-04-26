@@ -29,8 +29,7 @@ using System;
 
 namespace LZ4Net {
     public class LZ4Exception : Exception {
-        public LZ4Exception(string message) : base(message) {
-        }
+        public LZ4Exception(string message) : base(message) {}
     }
 
     /// <summary>Unsafe LZ4 codec.</summary>
@@ -190,18 +189,7 @@ namespace LZ4Net {
             internal byte* nextToUpdate;
             internal int[] hashTable = new int[HASHHC_TABLESIZE];
             internal ushort[] chainTable = new ushort[MAXD];
-
-            public void Reset() {
-                Array.Clear(HASH64K, 0, HASH64K.Length);
-                Array.Clear(HASH, 0, HASH.Length);
-
-                src_base = (byte*)0;
-                nextToUpdate = (byte*)0;
-                Array.Clear(hashTable, 0, hashTable.Length);
-                Array.Clear(chainTable, 0, chainTable.Length);
-            }
         }
-
 
         /// <summary>Encodes the specified input.</summary>
         /// <param name="input">The input.</param>
@@ -217,17 +205,18 @@ namespace LZ4Net {
             int result;
             if (inputLength < LZ4_64KLIMIT) {
                 var hashTable = lz4EncodeContext.HASH64K;
-                fixed (ushort* h = &hashTable[0]) {
+                fixed (ushort* h = hashTable) {
+                    BlockFill((byte*)h, HASH64K_TABLESIZE * sizeof(ushort), 0x00);
                     result = LZ4_compress64kCtx(h, input, output, inputLength, outputLength);
                 }
             }
             else {
                 var hashTable = lz4EncodeContext.HASH;
-                fixed (byte** h = &hashTable[0]) {
+                fixed (byte** h = hashTable) {
+                    BlockFill((byte*)h, HASH_TABLESIZE * sizeof(byte*), 0x00);
                     result = LZ4_compressCtx(h, input, output, inputLength, outputLength);
                 }
             }
-            lz4EncodeContext.Reset();
             return result;
         }
 
@@ -272,10 +261,10 @@ namespace LZ4Net {
             int inputLength,
             byte* output,
             int outputLength) {
-                var length = LZ4_uncompress(input, output, outputLength);
-                if (length != inputLength)
-                    throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length +" inputLength: "+inputLength);
-                return outputLength;
+            var length = LZ4_uncompress(input, output, outputLength);
+            if (length != inputLength)
+                throw new ArgumentException("LZ4 block is corrupted, or invalid length has been given. length: " + length + " inputLength: " + inputLength);
+            return outputLength;
         }
 
         /// <summary>Decodes the specified input.</summary>
@@ -310,8 +299,11 @@ namespace LZ4Net {
         // ReSharper disable InconsistentNaming
 
         static unsafe LZ4EncodeContext LZ4HC_Create(LZ4EncodeContext hc4, byte* src) {
-            fixed (ushort* ct = &hc4.chainTable[0]) {
+            fixed (ushort* ct = hc4.chainTable) {
                 BlockFill((byte*)ct, MAXD * sizeof(ushort), 0xFF);
+            }
+            fixed (int* h = hc4.hashTable) {
+                BlockFill((byte*)h, HASHHC_TABLESIZE * sizeof(int), 0x00);
             }
 
             hc4.src_base = src;
@@ -350,7 +342,6 @@ namespace LZ4Net {
             fixed (byte* inputPtr = &input[inputOffset])
             fixed (byte* outputPtr = &output[outputOffset]) {
                 var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
-                hc4.Reset();
                 // NOTE: there is a potential problem here as original implementation returns 0 not -1
                 return length <= 0 ? -1 : length;
             }
@@ -367,7 +358,6 @@ namespace LZ4Net {
 
             var length = LZ4_compressHC(hc4, inputPtr, outputPtr, inputLength, outputLength);
             // NOTE: there is a potential problem here as original implementation returns 0 not -1
-            hc4.Reset();
 
             return length <= 0 ? -1 : length;
         }
@@ -831,7 +821,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH) {
                             if (dst_cpy != dst_end)
-                                throw new LZ4Exception("LZ4 Stream corrupt. Not enough place for another match (min 4) + 5 literals");
+                                throw new LZ4Exception("LZ4 Stream corrupt."); // Not enough place for another match (min 4) + 5 literals");
                             BlockCopy(src_p, dst_p, (length));
                             src_p += length;
                             break; // EOF
@@ -851,7 +841,7 @@ namespace LZ4Net {
                         xxx_ref = (dst_cpy) - (*(ushort*)(src_p));
                         src_p += 2;
                         if (xxx_ref < dst)
-                            throw new LZ4Exception("LZ4 Stream corrupt. Offset outside destination buffer");
+                            throw new LZ4Exception("LZ4 Stream corrupt.");// Offset outside destination buffer");
 
                         // get matchlength
                         if ((length = (int)(xxx_token & ML_MASK)) == ML_MASK) {
@@ -884,7 +874,7 @@ namespace LZ4Net {
 
                         if (dst_cpy > dst_COPYLENGTH_STEPSIZE_4) {
                             if (dst_cpy > dst_LASTLITERALS)
-                                throw new LZ4Exception("LZ4 Stream corrupt. Last 5 bytes must be literals");
+                                throw new LZ4Exception("LZ4 Stream corrupt.");// Last 5 bytes must be literals");
                             {
                                 do {
                                     *(uint*)dst_p = *(uint*)xxx_ref;
